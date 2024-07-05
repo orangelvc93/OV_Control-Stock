@@ -13,7 +13,7 @@ import toast from "react-hot-toast"
 import * as z from 'zod'
 
 
-export const FormLogin = () => {
+export const FormRegister = () => {
 
     const [isLoading, setIsLoading] = useState<boolean>(false)
 
