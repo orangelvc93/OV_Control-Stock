@@ -4,3 +4,5 @@ tailwind - react - next - shadcn ui - react icons
 zod
 react-hook-form
 firebase
+
+react-toastify

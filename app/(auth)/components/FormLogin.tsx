@@ -9,7 +9,8 @@ import { useState } from "react"
 
 
 import { useForm } from "react-hook-form"
-import toast from "react-hot-toast"
+import { Bounce, ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import * as z from 'zod'
 
 
@@ -54,7 +55,20 @@ export const FormLogin = () => {
             console.log(res)
         } catch (error: any) {
             console.log(error)
-            toast.error('Las credenciales del usuario no son validas', { duration: 3000 })
+
+            /* Definimos los parametros que debe tener el toast */
+            const notify = () => toast.error('El usuario o contraseña son incorrectos!', {
+                position: "top-center",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+                transition: Bounce,
+            });
+            notify();
         } finally {
             /* Cuando finaliza la solicitud finalizamos el loader */
             setIsLoading(false)
@@ -64,6 +78,8 @@ export const FormLogin = () => {
 
     return (
         <>
+            {/* Agregamos el toast */}
+            <ToastContainer limit={3} />
             <div className="text-center">
                 <h1 className="text-2xl font-semibold">
                     Iniciar Sesión

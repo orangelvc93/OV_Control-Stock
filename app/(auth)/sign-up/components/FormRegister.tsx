@@ -1,7 +1,7 @@
 'use client'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { signIn } from "@/lib/firebase"
+import { createUser, updateUser } from "@/lib/firebase"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { LoaderCircle } from "lucide-react"
 import Link from "next/link"
@@ -19,6 +19,8 @@ export const FormRegister = () => {
 
     /*Estructura y validaciones del Formulario ============== */
     const formSchema = z.object({
+        uid: z.string(),
+        name: z.string().min(4, { message: 'El nombre debe tener al menos 4 caracteres' }),
         email: z.string().email('El formato del email es incorrecto. Ejemplo: user@example.com').min(1, { message: 'Este campo es requerido' }),
         password: z.string().min(6, { message: 'La contraseña debe tener al menos 8 caracteres' }),
     })
@@ -27,6 +29,8 @@ export const FormRegister = () => {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
+            uid: '', // Aquí puedes proporcionar un valor inicial específico si lo deseas
+            name: '', // Aquí también puedes proporcionar un valor inicial específico si lo deseas
             email: '', // Aquí puedes proporcionar un valor inicial específico si lo deseas
             password: '', // Aquí también puedes proporcionar un valor inicial específico
         }
@@ -44,19 +48,20 @@ export const FormRegister = () => {
 
     /* Iniciar sesión============== */
     const onSubmit = async (user: z.infer<typeof formSchema>) => {
-        /* console.log(user) */
-        /* Apenas hacemos la solicitud el loader esta activo */
+        console.log(user)
+        // Apenas hacemos la solicitud el loader esta activo 
         setIsLoading(true)
 
-        /* Realizar la petición al backend para iniciar sesión */
+        //Realizar la petición al backend para iniciar sesión 
         try {
-            let res = await signIn(user);
+            let res = await createUser(user);
+            await updateUser({ displayName: user.name })
             console.log(res)
         } catch (error: any) {
             console.log(error)
             toast.error('Las credenciales del usuario no son validas', { duration: 3000 })
         } finally {
-            /* Cuando finaliza la solicitud finalizamos el loader */
+            // Cuando finaliza la solicitud finalizamos el loader 
             setIsLoading(false)
         }
     }
@@ -66,15 +71,27 @@ export const FormRegister = () => {
         <>
             <div className="text-center">
                 <h1 className="text-2xl font-semibold">
-                    Iniciar Sesión
+                    Crear Nueva Cuenta
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                    Ingresa tu email y contraseña para iniciar sesión.
+                    Ingresa tus datos para crear una nueva cuenta.
                 </p>
             </div>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <div className="grid gap-2">
 
+                    {/* ==========Name================== */}
+                    <div className="mb-3">
+                        <label className="font-bold text-lg" htmlFor="name">Nombre</label>
+                        <Input
+                            {...register('name')}
+                            id="name"
+                            placeholder="John Doe"
+                            type="text"
+                            autoComplete="name"
+                        />
+                        <p className="form-error">{errors.name?.message}</p>
+                    </div>
                     {/* ==========Email================== */}
                     <div className="mb-3">
                         <label className="font-bold text-lg" htmlFor="email">Correo</label>
@@ -99,9 +116,7 @@ export const FormRegister = () => {
                         <p className="form-error">{errors.password?.message}</p>
                     </div>
 
-                    <Link href='/forgot-password' className="underline text-muted-foreground underline-offset-4 hover:text-primary mb-6 text-sm text-end">
-                        ¿Olvidaste la contraseña?
-                    </Link>
+
 
                     {/* ===========Submit==================== */}
                     <Button type="submit" disabled={isLoading}>
@@ -111,10 +126,10 @@ export const FormRegister = () => {
             </form>
 
             <p className="text-center text-sm text-muted-foreground">
-                ¿Aun no tienes cuenta? {""}
+                ¿Ya tienes una cuenta? {""}
 
-                <Link href='/sign-up' className="underline  underline-offset-4 hover:text-primary">
-                    Regístrate
+                <Link href='/' className="underline  underline-offset-4 hover:text-primary">
+                    Iniciar Sesión
                 </Link>
             </p>
         </>
