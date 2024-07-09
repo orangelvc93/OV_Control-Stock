@@ -1,7 +1,8 @@
 'use client'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { createUser, updateUser } from "@/lib/firebase"
+import { createUser, setDocument, updateUser } from "@/lib/firebase"
+import { User } from "@/types/userTypes"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { LoaderCircle } from "lucide-react"
 import Link from "next/link"
@@ -9,7 +10,8 @@ import { useState } from "react"
 
 
 import { useForm } from "react-hook-form"
-import toast from "react-hot-toast"
+import 'react-toastify/dist/ReactToastify.css';
+import { Bounce, ToastContainer, toast } from 'react-toastify';
 import * as z from 'zod'
 
 
@@ -56,7 +58,11 @@ export const FormRegister = () => {
         try {
             let res = await createUser(user);
             await updateUser({ displayName: user.name })
-            console.log(res)
+            //console.log(res)
+
+            user.uid = res.user.uid
+
+            await createUserInDb(user as User)
         } catch (error: any) {
             console.log(error)
             toast.error('Las credenciales del usuario no son validas', { duration: 3000 })
@@ -65,10 +71,39 @@ export const FormRegister = () => {
             setIsLoading(false)
         }
     }
-
+    /* ============Crear usuario en la DB de Firebase ========================= */
+    const createUserInDb = async (user: User) => {
+        const path = `users/${user.uid}`
+        setIsLoading(true)
+        try {
+            // Crear una copia del usuario y eliminar la propiedad password
+            const { password, ...userWithoutPassword } = user;
+            // Realizar la petición al backend para crear la cuenta en la base de datos
+            await setDocument(path, userWithoutPassword)
+            const notify = () => toast.success(`Bienvenido ${user.name} 👋`, {
+                position: "top-center",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+                transition: Bounce,
+            });
+            notify();
+        } catch (error: any) {
+            console.log(error)
+        } finally {
+            // Cuando finaliza la solicitud finalizamos el loader 
+            setIsLoading(false)
+        }
+    }
 
     return (
         <>
+            {/* Agregamos el toast */}
+            <ToastContainer limit={3} />
             <div className="text-center">
                 <h1 className="text-2xl font-semibold">
                     Crear Nueva Cuenta
@@ -128,7 +163,7 @@ export const FormRegister = () => {
             <p className="text-center text-sm text-muted-foreground">
                 ¿Ya tienes una cuenta? {""}
 
-                <Link href='/' className="underline  underline-offset-4 hover:text-primary">
+                <Link href=' /' className="underline  underline-offset-4 hover:text-primary">
                     Iniciar Sesión
                 </Link>
             </p>

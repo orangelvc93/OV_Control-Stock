@@ -6,6 +6,12 @@ import {
 	signInWithEmailAndPassword,
 	updateProfile,
 } from "firebase/auth";
+import {
+	doc,
+	getFirestore,
+	serverTimestamp,
+	setDoc,
+} from "firebase/firestore/lite";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -27,6 +33,8 @@ export default app;
 
 /* Exportamos el servicio de autenticación */
 export const auth = getAuth(app);
+/* Exportamos el servicio de base de datos */
+export const db = getFirestore(app);
 
 /* =========funciones de autenticación ============================================ */
 
@@ -47,4 +55,14 @@ export const updateUser = (user: {
 	if (auth.currentUser) {
 		return updateProfile(auth.currentUser, user);
 	}
+};
+
+/* =========funciones de la DB ============================================ */
+
+/* --------- Guardamos un documento a la colección con el path especificado ---------- */
+//Tomamos el path o ruta y la data con la funcion setDoc para guardar los datos en la db de firestore
+export const setDocument = (path: string, data: any) => {
+	// Añadimos una propiedad de fecha de creación para que sea automáticamente actualizada con la fecha y hora actual al crear un nuevo documento
+	data.createAt = serverTimestamp();
+	return setDoc(doc(db, path), data);
 };
