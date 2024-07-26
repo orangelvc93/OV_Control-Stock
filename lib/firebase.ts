@@ -3,6 +3,7 @@ import { initializeApp } from "firebase/app";
 import {
 	createUserWithEmailAndPassword,
 	getAuth,
+	sendPasswordResetEmail,
 	signInWithEmailAndPassword,
 	updateProfile,
 } from "firebase/auth";
@@ -11,6 +12,7 @@ import {
 	getFirestore,
 	serverTimestamp,
 	setDoc,
+	getDoc,
 } from "firebase/firestore/lite";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -57,7 +59,24 @@ export const updateUser = (user: {
 	}
 };
 
+/* ---------Recuperar contraseña --------- */
+//Envía un correo para resetear la contraseña del usuario
+export const sendResetEmail = (email: string) => {
+	return sendPasswordResetEmail(auth, email);
+};
+
+/* ---------Cerrar Sesión de usuario --------- */
+export const signOutAccount = () => {
+	localStorage.removeItem("user");
+	return auth.signOut();
+};
+
 /* =========funciones de la DB ============================================ */
+
+/* --------- Obtener un documento de la colección ---------- */
+export const getDocument = async (path: string) => {
+	return (await getDoc(doc(db, path))).data();
+};
 
 /* --------- Guardamos un documento a la colección con el path especificado ---------- */
 //Tomamos el path o ruta y la data con la funcion setDoc para guardar los datos en la db de firestore

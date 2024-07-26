@@ -5,6 +5,6 @@ export type User = {
 	image?: string;
 	name: string;
 	email: string;
-	password: string;
-	createdAdd: Timestamp;
+	password?: string; //el ? significa que no es requerido
+	createdAt: Timestamp;
 };

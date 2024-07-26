@@ -1,44 +1,36 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { createUser, setDocument, updateUser } from "@/lib/firebase";
-import { User } from "@/types/userTypes";
+import { sendResetEmail } from "@/lib/firebase";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoaderCircle } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useForm } from "react-hook-form";
-import "react-toastify/dist/ReactToastify.css";
 import { Bounce, ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import * as z from "zod";
 
-export const FormRegister = () => {
+export const RecoverPasswordForm = () => {
 	const [isLoading, setIsLoading] = useState<boolean>(false);
+
+	const router = useRouter();
 
 	/*Estructura y validaciones del Formulario ============== */
 	const formSchema = z.object({
-		uid: z.string(),
-		name: z
-			.string()
-			.min(4, { message: "El nombre debe tener al menos 4 caracteres" }),
 		email: z
 			.string()
 			.email("El formato del email es incorrecto. Ejemplo: user@example.com")
 			.min(1, { message: "Este campo es requerido" }),
-		password: z
-			.string()
-			.min(6, { message: "La contraseña debe tener al menos 8 caracteres" }),
 	});
 
 	/* Configuramos el validador del formulario con Zod y establecemos los valores iniciales */
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			uid: "", // Aquí puedes proporcionar un valor inicial específico si lo deseas
-			name: "", // Aquí también puedes proporcionar un valor inicial específico si lo deseas
 			email: "", // Aquí puedes proporcionar un valor inicial específico si lo deseas
-			password: "", // Aquí también puedes proporcionar un valor inicial específico
 		},
 	});
 
@@ -52,23 +44,36 @@ export const FormRegister = () => {
 
 	/* Iniciar sesión============== */
 	const onSubmit = async (user: z.infer<typeof formSchema>) => {
-		console.log(user);
-		// Apenas hacemos la solicitud el loader esta activo
+		/* console.log(user) */
+		/* Apenas hacemos la solicitud el loader esta activo */
 		setIsLoading(true);
 
-		//Realizar la petición al backend para iniciar sesión
+		/* Realizar la petición al backend para enviar el correo de recuperación */
 		try {
-			let res = await createUser(user);
-			await updateUser({ displayName: user.name });
-			//console.log(res)
-
-			user.uid = res.user.uid;
-
-			await createUserInDb(user as User);
+			await sendResetEmail(user.email);
+			/* Definimos los parametros que debe tener el toast */
+			const notify = () =>
+				toast.success("Exito", {
+					position: "top-center",
+					autoClose: 3000,
+					hideProgressBar: false,
+					closeOnClick: true,
+					pauseOnHover: true,
+					draggable: true,
+					progress: undefined,
+					theme: "dark",
+					transition: Bounce,
+				});
+			notify();
+			setTimeout(() => {
+				router.push("/");
+			}, 4000);
 		} catch (error: any) {
 			console.log(error);
+
+			/* Definimos los parametros que debe tener el toast */
 			const notify = () =>
-				toast.warn("Las credenciales del usuario no son validas", {
+				toast.error("El usuario o contraseña son incorrectos!", {
 					position: "top-center",
 					autoClose: 3000,
 					hideProgressBar: false,
@@ -81,82 +86,23 @@ export const FormRegister = () => {
 				});
 			notify();
 		} finally {
-			// Cuando finaliza la solicitud finalizamos el loader
-			setIsLoading(false);
-		}
-	};
-	/* ============Crear usuario en la DB de Firebase ========================= */
-	const createUserInDb = async (user: User) => {
-		const path = `users/${user.uid}`;
-		setIsLoading(true);
-		try {
-			// Crear una copia del usuario y eliminar la propiedad password
-			const { password, ...userWithoutPassword } = user;
-			// Realizar la petición al backend para crear la cuenta en la base de datos
-			await setDocument(path, userWithoutPassword);
-			const notify = () =>
-				toast.success(`Bienvenido ${user.name} 👋`, {
-					position: "top-center",
-					autoClose: 3000,
-					hideProgressBar: false,
-					closeOnClick: true,
-					pauseOnHover: true,
-					draggable: true,
-					progress: undefined,
-					theme: "dark",
-					transition: Bounce,
-				});
-			notify();
-		} catch (error: any) {
-			console.log(error);
-			const notify = () =>
-				toast.warn(error.message, {
-					position: "top-center",
-					autoClose: 3000,
-					hideProgressBar: false,
-					closeOnClick: true,
-					pauseOnHover: true,
-					draggable: true,
-					progress: undefined,
-					theme: "dark",
-					transition: Bounce,
-				});
-			notify();
-		} finally {
-			// Cuando finaliza la solicitud finalizamos el loader
+			/* Cuando finaliza la solicitud finalizamos el loader */
 			setIsLoading(false);
 		}
 	};
 
 	return (
-		<>
+		<div className="md:border border-solid border-gray-300 rounded-xl p-10">
 			{/* Agregamos el toast */}
 			<ToastContainer limit={3} />
 			<div className="text-center">
-				<h1 className="text-2xl font-semibold">Crear Nueva Cuenta</h1>
+				<h1 className="text-2xl font-semibold">Recuperar Contraseña</h1>
 				<p className="text-sm text-muted-foreground">
-					Ingresa tus datos para crear una nueva cuenta.
+					te enviaremos un correo para recuperar tu contraseña.
 				</p>
 			</div>
 			<form onSubmit={handleSubmit(onSubmit)}>
 				<div className="grid gap-2">
-					{/* ==========Name================== */}
-					<div className="mb-3">
-						<label
-							className="font-bold text-lg"
-							htmlFor="name"
-						>
-							Nombre
-						</label>
-						<Input
-							{...register("name")}
-							id="name"
-							placeholder="John Doe"
-							type="text"
-							autoComplete="name"
-						/>
-						<p className="form-error">{errors.name?.message}</p>
-					</div>
 					{/* ==========Email================== */}
 					<div className="mb-3">
 						<label
@@ -174,22 +120,6 @@ export const FormRegister = () => {
 						/>
 						<p className="form-error">{errors.email?.message}</p>
 					</div>
-					{/* ==========Password================== */}
-					<div className="mb-3">
-						<label
-							className="font-bold text-lg"
-							htmlFor="password"
-						>
-							Contraseña
-						</label>
-						<Input
-							{...register("password")}
-							id="password"
-							placeholder="name@example.com"
-							type="password"
-						/>
-						<p className="form-error">{errors.password?.message}</p>
-					</div>
 
 					{/* ===========Submit==================== */}
 					<Button
@@ -199,20 +129,19 @@ export const FormRegister = () => {
 						{isLoading && (
 							<LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
 						)}
-						Iniciar Sesión
+						Recuperar
 					</Button>
 				</div>
 			</form>
 
-			<p className="text-center text-sm text-muted-foreground">
-				¿Ya tienes una cuenta? {""}
+			<p className="text-center text-sm text-muted-foreground mt-3">
 				<Link
-					href=" /"
+					href="/"
 					className="underline  underline-offset-4 hover:text-primary"
 				>
-					Iniciar Sesión
+					{"<- Ir atras"}
 				</Link>
 			</p>
-		</>
+		</div>
 	);
 };
