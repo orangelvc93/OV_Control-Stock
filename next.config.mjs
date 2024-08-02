@@ -1,4 +1,16 @@
+import { hostname } from "os";
+
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+	images: {
+		remotePatterns: [
+			{
+				protocol: "https",
+				hostname: "firebasestorage.googleapis.com",
+				pathname: "**",
+			},
+		],
+	},
+};
 
 export default nextConfig;

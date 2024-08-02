@@ -1,14 +1,20 @@
-"use client";
+import Navbar from "@/components/Navbar";
+import { Metadata } from "next";
+import ProductItems from "./components/ProductItems";
 
-import { Button } from "@/components/ui/button";
-import { signOutAccount } from "@/lib/firebase";
-import React from "react";
+export const metadata: Metadata = {
+	title: "Dashboard",
+	description: "Gestiona tus productos",
+};
 
 const Dashboard = () => {
 	return (
-		<div>
-			<Button onClick={() => signOutAccount()}>Cerrar Sesión</Button>
-		</div>
+		<>
+			<Navbar />
+			<div className="md:border border-solid border-gray-300 rounded-3xl p-3 md:m-6 lg:mx-36">
+				<ProductItems />
+			</div>
+		</>
 	);
 };
 
